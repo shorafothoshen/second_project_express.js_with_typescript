@@ -1,8 +1,33 @@
 import express,{type Express,type Request, type Response} from 'express'
+import cors from 'cors';
+import { MongoClient } from 'mongodb';
+import 'dotenv/config'
+
 
 const app:Express=express()
 
 const PORT=process.env.POST||5000;
+
+
+// Middleware
+app.use(cors());
+app.use(express.json())
+
+
+const client = new MongoClient(`mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_USER_PASS}@cluster0.3fqxgpg.mongodb.net/`);
+
+
+export async function ConnectToMongoDB(){
+  try{
+    await client.connect();
+    console.log("Succesfully Connection to Mongodb");
+    return client;
+  }catch(err){
+      console.dir(err)
+  }
+}
+
+await ConnectToMongoDB();
 
 app.get('/',(req:Request,res:Response)=>{
     res.send("This is Home Page");
