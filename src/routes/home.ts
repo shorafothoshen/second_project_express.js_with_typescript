@@ -25,6 +25,20 @@ router.get("/about", (req: Request, res: Response) => {
   });
 });
 
+router.post("/contact", (req: Request, res: Response) => {
+  const { name, email, message } = req.body;
+
+  res.status(200).json({
+    success: true,
+    message: "Contact form submitted successfully!",
+    data: {
+      name,
+      email,
+      message,
+    },
+  });
+});
+
 // Not Found API Example
 router.get("/not-found", (req: Request, res: Response) => {
   res.sendStatus(404);
