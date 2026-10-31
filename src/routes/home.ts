@@ -1,8 +1,49 @@
-import { Router, type Request, type Response } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 
 const router = Router();
 
-router.get("/", (req: Request, res: Response) => {
+// ---------- Types ----------
+interface ContactBody {
+  name: string;
+  email: string;
+  message: string;
+}
+
+interface ApiResponse<T = unknown> {
+  success: boolean;
+  message: string;
+  data?: T;
+  errors?: string[];
+}
+
+// ---------- Helpers ----------
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const validateContact = (body: Partial<ContactBody>): string[] => {
+  const errors: string[] = [];
+
+  if (!body.name || body.name.trim().length < 2) {
+    errors.push("Name must be at least 2 characters long.");
+  }
+  if (!body.email || !EMAIL_REGEX.test(body.email)) {
+    errors.push("A valid email address is required.");
+  }
+  if (!body.message || body.message.trim().length < 10) {
+    errors.push("Message must be at least 10 characters long.");
+  }
+
+  return errors;
+};
+
+// Async error wrapper (useful when you add DB calls later)
+const asyncHandler =
+  (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    fn(req, res, next).catch(next);
+  };
+
+// ---------- Routes ----------
+router.get("/", (_req: Request, res: Response<ApiResponse>) => {
   res.status(200).json({
     success: true,
     message: "Welcome to My API!",
@@ -15,7 +56,7 @@ router.get("/", (req: Request, res: Response) => {
   });
 });
 
-router.get("/about", (req: Request, res: Response) => {
+router.get("/about", (_req: Request, res: Response<ApiResponse>) => {
   res.status(200).json({
     success: true,
     message: "About API",
@@ -25,23 +66,42 @@ router.get("/about", (req: Request, res: Response) => {
   });
 });
 
-router.post("/contact", (req: Request, res: Response) => {
-  const { name, email, message } = req.body;
+router.post(
+  "/contact",
+  asyncHandler(async (req: Request<{}, {}, Partial<ContactBody>>, res: Response<ApiResponse>) => {
+    const errors = validateContact(req.body);
 
-  res.status(200).json({
-    success: true,
-    message: "Contact form submitted successfully!",
-    data: {
-      name,
-      email,
-      message,
-    },
+    if (errors.length > 0) {
+      res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors,
+      });
+      return;
+    }
+
+    const { name, email, message } = req.body as ContactBody;
+
+    // TODO: save to database / send email here
+
+    res.status(201).json({
+      success: true,
+      message: "Contact form submitted successfully!",
+      data: {
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        message: message.trim(),
+      },
+    });
+  })
+);
+
+// Not Found example (JSON response instead of plain text)
+router.get("/not-found", (_req: Request, res: Response<ApiResponse>) => {
+  res.status(404).json({
+    success: false,
+    message: "Resource not found",
   });
-});
-
-// Not Found API Example
-router.get("/not-found", (req: Request, res: Response) => {
-  res.sendStatus(404);
 });
 
 export default router;
