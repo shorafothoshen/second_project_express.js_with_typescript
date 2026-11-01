@@ -1,8 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 
 const router = Router();
-
-// ---------- Types ----------
 interface ContactBody {
   name: string;
   email: string;
@@ -16,7 +14,6 @@ interface ApiResponse<T = unknown> {
   errors?: string[];
 }
 
-// ---------- Helpers ----------
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const validateContact = (body: Partial<ContactBody>): string[] => {
@@ -35,14 +32,12 @@ const validateContact = (body: Partial<ContactBody>): string[] => {
   return errors;
 };
 
-// Async error wrapper (useful when you add DB calls later)
 const asyncHandler =
   (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) =>
   (req: Request, res: Response, next: NextFunction) => {
     fn(req, res, next).catch(next);
   };
 
-// ---------- Routes ----------
 router.get("/", (_req: Request, res: Response<ApiResponse>) => {
   res.status(200).json({
     success: true,
@@ -82,7 +77,6 @@ router.post(
 
     const { name, email, message } = req.body as ContactBody;
 
-    // TODO: save to database / send email here
 
     res.status(201).json({
       success: true,
@@ -96,7 +90,6 @@ router.post(
   })
 );
 
-// Not Found example (JSON response instead of plain text)
 router.get("/not-found", (_req: Request, res: Response<ApiResponse>) => {
   res.status(404).json({
     success: false,
