@@ -90,11 +90,5 @@ router.post(
   })
 );
 
-router.get("/not-found", (_req: Request, res: Response<ApiResponse>) => {
-  res.status(404).json({
-    success: false,
-    message: "Resource not found",
-  });
-});
 
 export default router;
